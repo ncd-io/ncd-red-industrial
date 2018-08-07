@@ -1,0 +1,79 @@
+<script type="text/javascript">
+	RED.nodes.registerType('ncd-proxr',{
+        category: 'NCD',
+        color: '#a6bbcf',
+        defaults: {
+            name: {value: ""},
+			host: {value: ""},
+			port: {value: 2101, validate: RED.validators.number()},
+			encrypt: {value: ""},
+			encryptBits: {value: "16"},
+			encryptKey: {value: ""}
+
+        },
+        inputs:1,
+        outputs:1,
+		icon: "serial.png",
+        label: function() {
+            return this.name || "ProXR";
+    	},
+		oneditprepare: function() {
+			$('#node-input-encryptKey').keyup(function(){
+				var val = $(this).val();
+				if(!val.length) return;
+				var parts = val.replace(/-/g, '').match(/.{1,2}/g);
+				if(parts.length > $('#node-input-encryptBits').val()){
+					parts.pop();
+				}
+				$(this).val(parts.join('-'));
+			});
+		}
+    });
+</script>
+
+<script type="text/x-red" data-template-name="ncd-proxr">
+	<div class="form-row">
+		<label for="node-input-name"><i class="icon-tag"></i> Name</label>
+		<input type="text" id="node-input-name" placeholder="Name">
+	</div>
+	<div class="form-row">
+		<label for="node-input-host"><i class="icon-tag"></i> Device Address (usually a local IP)</label>
+		<input type="text" placeholder="192.168.1.2" id="node-input-host" />
+	</div>
+	<div class="form-row">
+		<label for="node-input-port"><i class="icon-tag"></i> Device Port (2101 by default)</label>
+		<input type="text" placeholder="2101" id="node-input-port" />
+	</div>
+	<div class="form-row">
+		<label for="node-input-encrypt"><i class="icon-bookmark"></i> Enable Encryption</label>
+		<input type="checkbox" id="node-input-encrypt" value="1" />
+	</div>
+	<div class="form-row" class="encrypt-opts">
+		<label for="node-input-encryptBits"><i class="icon-bookmark"></i> Encryption Type</label>
+		<select id="node-input-encryptBits">
+			<option value="16" selected="selected">AES 128 Bit</option>
+			<option value="32">AES 256 Bit</option>
+		</select>
+	</div>
+	<div class="form-row" class="encrypt-opts">
+		<label for="node-input-encryptKey"><i class="icon-tag"></i> Encryption Key (hex)</label>
+		<input type="text" placeholder="01-04-c2-5a-12-43-52-f4-e3-b2-bc-ae" id="node-input-encryptKey" />
+	</div>
+</script>
+
+<script type="text/x-red" data-help-name="ncd-proxr">
+    <h3>ProXR Commands</h3>
+	<p>Tell people how to use this thing...</p>
+	<pre><code>
+	var command = {
+		relay: (int) 1-1024,
+		group: (string) all, even, or odd,
+		banks: (ifset) all banks,
+		bank: (int) 1-128,
+		op: (string) on, off, active, deactivate, toggle,
+		mtype: (string) in (pulse *in* x) or for (on *for* x),
+		duration: (int|obj) {h,m,s},
+		scale: (string) second(s), minute(s), or hour(s) optional if duration is obj
+	}
+	</code></pre>
+</script>
