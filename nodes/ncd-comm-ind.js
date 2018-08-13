@@ -4,18 +4,16 @@ module.exports = function(RED) {
 	var devicePool = {};
     function NcdIndConfig(n) {
         RED.nodes.createNode(this,n);
-        this.bus = n.bus;
-		this.addr = parseInt(n.addr);
 
 		var comm, commName;
 		switch(n.commType){
 			case 'tcp':
 				commName = n.tcpHost;
-				comm = new comms.NcdTCP(n.tcpHost, n.tcpPort);
+				comm = new comms.NcdTCP(n.tcpHost, parseInt(n.tcpPort));
 				break;
 			case 'serial':
 				commName = n.serialDev;
-				comm = new comms.NcdSerial(n.serialDev, n.baudRate);
+				comm = new comms.NcdSerial(n.serialDev, parseInt(n.baudRate));
 				break;
 		}
 		if(n.encrypt){
