@@ -1,6 +1,6 @@
 {
 	"name": "ncd-red-industrial",
-	"version": "1.1.0",
+	"version": "1.2.0",
 	"description": "",
 	"main": "index.js",
 	"scripts": {
@@ -14,12 +14,13 @@
 	"author": "Trey Felton",
 	"license": "MIT",
 	"dependencies": {
-		"ncd-red-comm": "^1.6.1",
-		"promise-queue": "^2.2.5"
+		"promise-queue": "^2.2.5",
+		"ncd-red-comm": "^1.6.2"
 	},
 	"node-red": {
 		"nodes": {
-			"ncd-proxr": "nodes/ncd-proxr.js"
+			"ncd-proxr": "nodes/ncd-proxr.js",
+			"ncd-comm-ind": "nodes/ncd-comm-ind.js"
 		}
 	}
 }
