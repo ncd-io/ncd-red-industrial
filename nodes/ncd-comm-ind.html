@@ -1,0 +1,163 @@
+<script type="text/javascript">
+    RED.nodes.registerType('ncd-comm-ind',{
+        category: 'config',
+        defaults: {
+			name: {value: ""},
+			commType: {value: "serial"},
+			serialDev: {value: ""},
+			bauseRate: {value: "115200"},
+			tcpHost: {value: ""},
+			tcpPort: {value: 2101, validate: RED.validators.number()},
+			encrypt: {value: ""},
+			encryptBits: {value: "16"},
+			encryptKey: {value: ""}
+        },
+        label: function() {
+			if(this.name) return this.name;
+			var label = this.commType;
+			if(this.commType == 'serial'){
+				label += ' ('+this.serialDev+')';
+			}
+			if(this.commType == 'tcp'){
+				label += ' ('+this.tcpHost+':'+this.tcpPort+')';
+			}
+            return label;
+        },
+		oneditprepare: function() {
+
+			var config = this;
+			var blist = [
+                {value:"115200",label:"115200",hasValue:false},
+                {value:"57600",label:"57600",hasValue:false},
+                {value:"38400",label:"38400",hasValue:false},
+                {value:"19200",label:"19200",hasValue:false},
+                {value:"9600",label:"9600",hasValue:false},
+                {value:"4800",label:"4800",hasValue:false},
+                {value:"2400",label:"2400",hasValue:false},
+                {value:"1200",label:"1200",hasValue:false},
+                {value:"600",label:"600",hasValue:false},
+                {value:"300",label:"300",hasValue:false},
+                {label:"other",value:"other",icon:"red/images/typedInput/09.png",validate:/^[0-9]*$/}
+            ];
+            var serialbaudType = "custom";
+            for (var i in blist) {
+                if (this.serialbaud == blist[i].value) {
+                    serialbaudType = this.serialbaud;
+                }
+            }
+            $("#node-config-input-baudRate").typedInput({
+                default: this.serialbaud,
+                types:blist
+            });
+
+			$('#node-config-input-commType').change(function(){
+				commType = $(this).val();
+				if(commType == 'tcp'){
+					$('.serial-options').hide();
+					$('.tcp-options').show();
+					return;
+				}else if(commType == 'serial'){
+					$('.tcp-options').hide();
+					$('.serial-options').show();
+					$('#node-config-input-serialDev option').remove();
+					$.getJSON('ncd/i2c-bus/list/ncd-usb', function(busses) {
+						if (busses.length !== 0) {
+							busses.forEach((bus) => {
+								var option = $('<option/>',{
+									'value': bus,
+									'text': bus
+								});
+								if(bus == config.serialDev) option.attr('selected', 'selected');
+								option.appendTo('#node-config-input-serialDev');
+							});
+						}
+					});
+				}
+			});
+			$('#node-input-encryptKey').keyup(function(){
+				var val = $(this).val();
+				if(!val.length) return;
+				var parts = val.replace(/-/g, '').match(/.{1,2}/g);
+				if(parts.length > $('#node-input-encryptBits').val()){
+					parts.pop();
+				}
+				$(this).val(parts.join('-'));
+			});
+		},
+		oneditsave: function() {
+            var mytype = $("#node-config-input-baudRate").typedInput('type');
+            if (mytype !== "other") {
+                $("#node-config-input-baudRate").typedInput('value',mytype);
+            }
+            this.serialbaud = $("#node-config-input-baudRate").typedInput('value');
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="ncd-comm-ind">
+	<div class="form-row">
+        <label for="node-config-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-config-input-name" placeholder="Name">
+    </div>
+	<div class="form-row">
+		<label for="node-config-input-commType"><i class="icon-bookmark"></i> Comm Type</label>
+		<select id="node-config-input-commType">
+			<option value="serial">Serial</option>
+			<option value="tcp">TCP/IP</option>
+		</select>
+	</div>
+	<div class="serial-options">
+	    <div class="form-row">
+	        <label for="node-config-input-serialDev"><i class="icon-bookmark"></i> Serial Device</label>
+	        <select id="node-config-input-serialDev">
+				<option selected="selected">--Select Serial Device--</option>
+			</select>
+	    </div>
+		<div class="form-row">
+			<label for="node-config-input-baudRate"><i class="icon-bookmark"></i> Baud Rate</label>
+			<input id="node-config-input-baudeRate" />
+		</div>
+	</div>
+	<div class="tcp-options">
+		<div class="form-row">
+			<label for="node-config-input-tcpHost"><i class="icon-tag"></i> Device Address (usually a local IP)</label>
+			<input type="text" placeholder="192.168.1.2" id="node-config-input-tcpHost" />
+		</div>
+		<div class="form-row">
+			<label for="node-config-input-tcpPort"><i class="icon-tag"></i> Device Port (2101 by default)</label>
+			<input type="text" placeholder="2101" id="node-config-input-tcpPort" />
+		</div>
+	</div>
+	<div class="form-row">
+		<label for="node-config-input-encrypt"><i class="icon-bookmark"></i> Enable Encryption</label>
+		<input type="checkbox" id="node-config-input-encrypt" value="1" />
+	</div>
+	<div class="form-row" class="encrypt-opts">
+		<label for="node-config-input-encryptBits"><i class="icon-bookmark"></i> Encryption Type</label>
+		<select id="node-config-input-encryptBits">
+			<option value="16" selected="selected">AES 128 Bit</option>
+			<option value="32">AES 256 Bit</option>
+		</select>
+	</div>
+	<div class="form-row" class="encrypt-opts">
+		<label for="node-config-input-encryptKey"><i class="icon-tag"></i> Encryption Key (hex)</label>
+		<input type="text" placeholder="01-04-c2-5a-12-43-52-f4-e3-b2-bc-ae" id="node-config-input-encryptKey" />
+	</div>
+</script>
+<script type="text/x-red" data-help-name="ncd-comm-ind">
+	<div>
+		<h3>Comm Type</h3>
+		<p>
+			<b>Select TCP/IP</b> If you are using a network connected board, usually with a Lantronix od WiFly module.<br />
+			<b>Select Serial</b> If you are using a device connected over serial, usually either through the USB port, or using a bluetooth device that supports mounting as a serial device.<br />
+		</p>
+	</div>
+	<div>
+		<h3>Encryption</h3>
+		<p>
+			Encryption of packets is supported for both comm types, though currently only certain Lantronix modules support it on the device side. Enable this option to encrypt packets.
+		</p>
+		<h4>Encryption Key</h4>
+		<p>The encryption key should be in hex with no notation (5ab315... without "x" or "0x") and should be 32 characters (16 hex bytes) or 64 characters (32 hex bytes) long for 128 or 256 bit encryption respectively.</p>
+	</div>
+</script>

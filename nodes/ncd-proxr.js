@@ -4,26 +4,11 @@ const NCD = require("../index.js");
 const Queue = require("promise-queue");
 
 module.exports = function(RED){
-	var connections = {};
 
 	function NcdProXRNode(config){
 		RED.nodes.createNode(this, config);
-		this.addr = config.host;
-		this.port = parseInt(config.port);
-		var connection;
-		if(typeof connections[this.addr] == 'undefined'){
-			connections[this.addr] = new comms.NcdTCP(this.addr, this.port);
-		}
 
-		if(config.encrypt){
-			var key = Buffer.from(config.encryptKey.replace(/-/g, ''), 'hex');
-			var crypto = new comms.NcdAes(key);
-			connections[this.addr].setCrypto(crypto);
-		}else{
-			connections[this.addr].crypto = false;
-		}
-
-		this.board = new NCD.NcdProXR( connections[this.addr] );
+		this.board = new NCD.NcdProXR( RED.nodes.getNode(config.connection).comm );
 
 		var node = this;
 
@@ -53,6 +38,9 @@ module.exports = function(RED){
 			}
 			node.board[method](msg.payload).then((r) => {
 				node.status({fill:"green",shape:"dot",text:"connected"});
+				msg.command = msg.payload;
+				msg.payload = r;
+				node.send(msg);
 			}).catch((err) => {
 				node.status({fill:"red",shape:"ring",text:"disconnected"});
 				node.warn(err);
