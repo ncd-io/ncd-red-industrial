@@ -1,4 +1,5 @@
 const comms = require("ncd-red-comm");
+const NcdDigiWrapper = require('../lib/NcdDigiWrapper.js');
 
 module.exports = function(RED) {
 	var devicePool = {};
@@ -21,7 +22,12 @@ module.exports = function(RED) {
 			comm = new comms.NcdAes(comm, key);
 		}
 		devicePool[commName] = comm;
-		this.comm = comm;
+		if(n.digi){
+			var digi = new comms.NcdDigiParser(comm);
+			this.comm = new NcdDigiWrapper(digi, n.digiMac.split(' ').map((h) => parseInt(h, 16)));
+		}else{
+			this.comm = comm;
+		}
     }
     RED.nodes.registerType("ncd-comm-ind", NcdIndConfig);
 }

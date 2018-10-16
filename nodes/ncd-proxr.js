@@ -11,7 +11,7 @@ module.exports = function(RED){
 		this.board = new NCD.NcdProXR( RED.nodes.getNode(config.connection).comm );
 
 		var node = this;
-
+		
 		this.board.init().then((s) => {
 			if([85,86,87].indexOf(s[0])<0){
 				node.warn('Could not establish connection with controller');

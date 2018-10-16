@@ -1,25 +1,38 @@
 const ncd = require('../index.js');
 const comms = require('ncd-red-comm');
+const NcdDigiWrapper = require('../lib/NcdDigiWrapper.js');
 
 
-var comm = new comms.NcdTCP("192.168.1.46", 2101);
+var serial = new comms.NcdSerial('/dev/tty.usbserial-A106F1ZE', 115200);
+var digi = new comms.NcdDigiParser(serial);
+
+// digi.on('digi_frame', (frame) => {
+// 	console.log(frame);
+// })
+//
+//
+//
+// digi.send.transmit_request([0x00,0x13,0xa2,0x00,0x41,0x81,0x51,0x66], [254,33]).then((r) => {
+// 	console.log(r);
+// });
+
+// var comm = new comms.NcdTCP("192.168.1.46", 2101);
+//
+//
+//
+// var key = [0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51,
+// 		0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51,
+// 		0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51,
+// 		0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51]
+//
+//
+//
+// var crypto = new comms.NcdAes(comm, Buffer.from(key))
 
 
-
-var key = [0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51,
-		0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51,
-		0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51,
-		0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51]
-
-
-
-var crypto = new comms.NcdAes(comm, Buffer.from(key))
-
-
+var comm = new NcdDigiWrapper(digi, [0x00,0x13,0xa2,0x00,0x41,0x81,0x51,0x66]);
 
 var board = new ncd.NcdProXR( comm );
-
-
 
 board.init().then((s) => {
 	if([85,86,87].indexOf(s[0])<0){
@@ -37,6 +50,9 @@ board.init().then((s) => {
 	// board.channel(2).toggle().then(console.log).catch(console.log);
 	//board.channel(2).toggle().then(console.log).catch(console.log);
 });
+
+
+
 //
 // var comm = new comms.NcdSerial('/dev/tty.NCDWiBleS-ESP32_SPP_SER', 115200);
 //

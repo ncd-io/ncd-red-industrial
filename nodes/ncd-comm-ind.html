@@ -8,6 +8,8 @@
 			baudRate: {value: "115200", validate: RED.validators.number()},
 			tcpHost: {value: ""},
 			tcpPort: {value: 2101, validate: RED.validators.number()},
+			digi: {value: ""},
+			digiMac: {value: ""},
 			encrypt: {value: ""},
 			encryptBits: {value: "16"},
 			encryptKey: {value: ""}
@@ -74,7 +76,7 @@
 					});
 				}
 			});
-			$('#node-input-encryptKey').keyup(function(){
+			$('#node-config-input-encryptKey').keyup(function(){
 				var val = $(this).val();
 				if(!val.length) return;
 				var parts = val.replace(/-/g, '').match(/.{1,2}/g);
@@ -83,6 +85,9 @@
 				}
 				$(this).val(parts.join('-'));
 			});
+			// $('#node-config-input-digi').(function(){
+			//
+			// })
 		},
 		oneditsave: function() {
             var mytype = $("#node-config-input-baudRate").typedInput('type');
@@ -116,6 +121,14 @@
 		<div class="form-row">
 			<label for="node-config-input-baudRate"><i class="icon-bookmark"></i> Baud Rate</label>
 			<input id="node-config-input-baudRate" />
+		</div>
+		<div class="form-row">
+			<label for="node-config-input-digi"><i class="icon-bookmark"></i> Using a Digi S3B Module in API mode</label>
+			<input type="checkbox" id="node-config-input-digi" value="1" />
+		</div>
+		<div class="form-row digi">
+			<label for="node-config-input-digiMac"><i class="icon-bookmark"></i> The MAC address of the destination Digi module</label>
+			<input type="text" id="node-config-input-digiMac" value="1" />
 		</div>
 	</div>
 	<div class="tcp-options">
