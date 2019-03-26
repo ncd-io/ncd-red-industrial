@@ -1,98 +1,45 @@
 const ncd = require('../index.js');
+//To use this in a custom package, comment out the previous line and uncomment the next one
+//const ncd = require('ncd-red-industrial');
+
 const comms = require('ncd-red-comm');
-const NcdDigiWrapper = require('../lib/NcdDigiWrapper.js');
 
-
+//Create Serial Connection
 var serial = new comms.NcdSerial('/dev/tty.usbserial-A106F1ZE', 115200);
+
+//Create Local Digi Modem
 var digi = new comms.NcdDigiParser(serial);
 
-// digi.on('digi_frame', (frame) => {
-// 	console.log(frame);
-// })
-//
-//
-//
-// digi.send.transmit_request([0x00,0x13,0xa2,0x00,0x41,0x81,0x51,0x66], [254,33]).then((r) => {
-// 	console.log(r);
-// });
+//Create Remote Digi Modem for ProXR Board, second argument is Digi Address to target
+var comm = new ncd.NcdDigiWrapper(digi, [0x00,0x13,0xa2,0x00,0x41,0x81,0x51,0x66]);
 
-// var comm = new comms.NcdTCP("192.168.1.46", 2101);
-//
-//
-//
-// var key = [0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51,
-// 		0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51,
-// 		0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51,
-// 		0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51, 0x51]
-//
-//
-//
-// var crypto = new comms.NcdAes(comm, Buffer.from(key))
-
-
-var comm = new NcdDigiWrapper(digi, [0x00,0x13,0xa2,0x00,0x41,0x81,0x51,0x66]);
-
+//Create ProXR Board
 var board = new ncd.NcdProXR( comm );
 
+//Initialize connection by sending test command
 board.init().then((s) => {
+	//If the response does not contain 85, 86, or 87 there was an error on the ProXR side
 	if([85,86,87].indexOf(s[0])<0){
-		console.log('bad response...');
-		console.log(s);
-		//board.channel(2).toggle().then(console.log).catch(console.log);
+		console.log('bad response...', s);
 	}else{
-		console.log(s);
+		//Toggle channel 2 on remote board
 		board.channel(2).toggle().then(console.log).catch(console.log);
-		//board.channel(2).status().then(console.log).catch(console.log);
 	}
-	// board.channel(2).toggle().then(console.log).catch(console.log);
 }).catch((err) => {
+	//If there was an error communicating with the module or the module returned an error
 	console.log(err);
-	// board.channel(2).toggle().then(console.log).catch(console.log);
-	//board.channel(2).toggle().then(console.log).catch(console.log);
 });
 
+//Methods to select channel/relay are either "board.channel(n) or board.relay(n)"
+//For boards with more than one bank the bank can be selected like this "board.bank(n)"
+//Action methods include toggle, on (or activate), off (or deactivate), pulse, timer, status, and readAD
+//All methods can be daisy chained:
+//	board.bank(2).relay(6).pulse(2, 'seconds').then().catch(console.log);
 
+//or used individually:
+//	board.bank(2);
+//	board.relay(6);
+//	board.timer(5, 'minutes').then().catch(console.log);
 
-//
-// var comm = new comms.NcdSerial('/dev/tty.NCDWiBleS-ESP32_SPP_SER', 115200);
-//
-// var crypto = new comms.NcdAes(Buffer.from("abcdefghijklmnop"));
-// crypto.iv = Buffer.from("abcdefghijndskai");
-//
-// console.log(crypto.encrypt(Buffer.from("This should work")));
-//console.log(crypto.decrypt(Buffer.from([ 184, 199, 204, 87, 21, 23, 229, 215, 106, 174, 25, 178, 198, 185, 231, 150 ])));
-
-//var sending = Buffer.from("Testing AES");
-// var buff = [];
-// comm.on('data', (d) => {
-// 	buff.push(d);
-// });
-//comm.write(crypto.encrypt(sending), (res) => {
-	// setTimeout(() => {
-	// 	if(buff.length){
-	// 		console.log(buff);
-	// 		console.log(buff.length);
-	// 		//crypto.iv = Buffer.from(buff.slice(0, 16));
-	// 		//crypto.iv = Buffer.from(buff);
-	// 		buff = crypto.decrypt(Buffer.from(buff));
-	// 		console.log(buff);
-	// 		console.log(buff.toString());
-	// 		process.exit(0);
-	// 	}
-	// }, 1000);
-
-//});
-//
-
+//The "relayTalk" method allows you to send human readable commands to the board
 //board.relayTalk('turn on relay 2 in 5 seconds').then().catch(console.log);
-//board.relay(2).pulse(5).then(console.log).catch(console.log);
-// var command = {
-// 	relay: 'the relay to control, integer starting at 1',
-// 	group: 'relay group - all, even, or odd',
-// 	banks: 'if set, control all banks',
-// 	bank: 'bank to control',
-// 	op: 'on, off, active, deactivate, toggle',
-// 	mtype: 'momentary type: in (pulse *in* x) or for (on *for* x)',
-// 	duration: 'either an int, or an object with h, m, and s as keys',
-// 	scale: 'second(s), minute(s), or hour(s), not needed if duration is an object'
-// }
