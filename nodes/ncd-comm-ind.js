@@ -6,28 +6,38 @@ module.exports = function(RED) {
     function NcdIndConfig(n) {
         RED.nodes.createNode(this,n);
 
-		var comm, commName;
+		var commName, dName;
 		switch(n.commType){
 			case 'tcp':
+				dName = `tcp-${n.tcpHost}-${n.tcpPort}`;
 				commName = n.tcpHost;
-				comm = new comms.NcdTCP(n.tcpHost, parseInt(n.tcpPort));
+				if(typeof devicePool[dName] == 'undefined'){
+					devicePool[dName] = new comms.NcdTCP(n.tcpHost, parseInt(n.tcpPort));
+					if(n.encrypt){
+						var key = Buffer.from(n.encryptKey.replace(/-/g, ''), 'hex');
+						devicePool[dName] = new comms.NcdAes(devicePool[dName], key);
+					}
+				}
 				break;
 			case 'serial':
+				dName = `serial-${n.serialDev}`;
 				commName = n.serialDev;
-				comm = new comms.NcdSerial(n.serialDev, parseInt(n.baudRate));
+				if(typeof devicePool[dName] == 'undefined'){
+					devicePool[dName] = new comms.NcdSerial(n.serialDev, parseInt(n.baudRate));
+					if(n.encrypt && !n.digi){
+						var key = Buffer.from(n.encryptKey.replace(/-/g, ''), 'hex');
+						devicePool[dName] = new comms.NcdAes(devicePool[dName], key);
+					}
+				}
 				break;
 		}
-		if(n.encrypt){
-			var key = Buffer.from(n.encryptKey.replace(/-/g, ''), 'hex');
-			comm = new comms.NcdAes(comm, key);
-		}
-		devicePool[commName] = comm;
+
 		if(n.digi){
-			var digi = new comms.NcdDigiParser(comm);
+			var digi = new comms.NcdDigiParser(devicePool[dName]);
 			this.comm = new NcdDigiWrapper(digi, n.digiMac.split(' ').map((h) => parseInt(h, 16)));
 		}else{
-			this.comm = comm;
+			this.comm = devicePool[dName];
 		}
     }
     RED.nodes.registerType("ncd-comm-ind", NcdIndConfig);
-}
+};

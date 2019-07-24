@@ -14,7 +14,6 @@
 	"author": "Trey Felton",
 	"license": "MIT",
 	"dependencies": {
-		"ncd-red-comm": "^1.6.3",
 		"promise-queue": "^2.2.5"
 	},
 	"node-red": {
